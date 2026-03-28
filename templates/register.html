@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="flex justify-center items-center h-[85vh] fade-in">
+
+    <div class="glass p-10 rounded-2xl w-[380px] text-center shadow-2xl">
+
+        <h2 class="text-3xl font-bold mb-6 text-indigo-300">
+            Create Account
+        </h2>
+
+        <!-- 🔴 ERROR MESSAGE HERE -->
+        {% if error %}
+        <div id="flashMessage"
+            class="bg-red-500/20 border border-red-400 text-red-300 
+                p-3 rounded-lg mb-4 text-sm animate-pulse transition-opacity duration-500">
+            {{ error }}
+        </div>
+        {% endif %}
+
+        <form method="POST" class="space-y-4">
+
+            <input type="text" name="name" placeholder="Full Name"
+            class="w-full p-3 rounded-lg bg-white/10 border border-white/20 focus:outline-none focus:border-indigo-400" required>
+
+            <input type="email" name="email" placeholder="Email"
+            class="w-full p-3 rounded-lg bg-white/10 border border-white/20 focus:outline-none focus:border-indigo-400" required>
+
+            <input type="password" name="password" placeholder="Password"
+            class="w-full p-3 rounded-lg bg-white/10 border border-white/20 focus:outline-none focus:border-indigo-400" required>
+
+            <button class="w-full bg-indigo-600 hover:bg-indigo-700 transition p-3 rounded-lg font-semibold">
+                Register
+            </button>
+        </form>
+
+        <p class="mt-6 text-gray-300">
+            Already registered?
+            <a href="/" class="text-indigo-300 hover:underline">Login</a>
+        </p>
+
+    </div>
+
+</div>
+<script>
+// Auto hide flash message after 5 seconds
+setTimeout(function () {
+    const msg = document.getElementById("flashMessage");
+    if (msg) {
+        msg.style.opacity = "0";
+        setTimeout(() => msg.remove(), 500); // remove after fade
+    }
+}, 5000);
+</script>
+
+{% endblock %}

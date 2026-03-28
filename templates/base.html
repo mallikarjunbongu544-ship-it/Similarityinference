@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<meta charset="UTF-8">
+<title>AI Copyright Detector</title>
+
+<!-- Tailwind -->
+<script src="https://cdn.tailwindcss.com"></script>
+
+<!-- Google Font -->
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+<style>
+
+/* =========================
+   BODY
+========================= */
+
+body{
+font-family:'Poppins',sans-serif;
+background:linear-gradient(135deg,#0f172a,#1e293b,#312e81);
+min-height:100vh;
+margin:0;
+overflow-x:hidden;
+color:white;
+}
+
+/* =========================
+   GLASS CARD
+========================= */
+
+.glass{
+background:rgba(255,255,255,0.08);
+backdrop-filter:blur(14px);
+border:1px solid rgba(255,255,255,0.15);
+box-shadow:0 10px 30px rgba(0,0,0,0.4);
+}
+
+/* =========================
+   PAGE FADE
+========================= */
+
+.page{
+animation:fade .5s ease;
+}
+
+@keyframes fade{
+from{opacity:0}
+to{opacity:1}
+}
+
+/* =========================
+   TOAST
+========================= */
+
+.toast{
+transform:translateX(120%);
+opacity:0;
+transition:all .5s ease;
+}
+
+.toast.show{
+transform:translateX(0);
+opacity:1;
+}
+
+/* =========================
+   PROGRESS BAR
+========================= */
+
+@keyframes progressBar{
+from{width:100%}
+to{width:0%}
+}
+
+.progress{
+animation:progressBar 5s linear forwards;
+}
+
+/* =========================
+   ERROR MODAL
+========================= */
+
+.modal{
+display:none;
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:rgba(0,0,0,0.65);
+align-items:center;
+justify-content:center;
+z-index:999;
+}
+
+.modal-content{
+background:#1e293b;
+padding:30px;
+border-radius:12px;
+text-align:center;
+width:350px;
+border:2px solid red;
+animation:blinkGlow 1s infinite alternate;
+}
+
+@keyframes blinkGlow{
+from{box-shadow:0 0 10px red}
+to{box-shadow:0 0 25px red}
+}
+
+/* =========================
+   FLASH POPUP
+========================= */
+
+.toast-overlay{
+position:fixed;
+top:0;
+left:0;
+width:100vw;
+height:100vh;
+background:rgba(0,0,0,0.7);
+display:flex;
+justify-content:center;
+align-items:center;
+z-index:9999;
+}
+
+.toast-box{
+background:#1e293b;
+padding:30px;
+border-radius:12px;
+width:350px;
+text-align:center;
+border:2px solid red;
+animation:blinkGlow 1s infinite alternate;
+box-shadow:0 0 15px red;
+}
+
+.toast-box h2{
+font-size:22px;
+margin-bottom:10px;
+font-weight:600;
+color:#f87171;
+}
+
+.toast-box p{
+color:#e5e7eb;
+margin-bottom:20px;
+font-size:15px;
+}
+
+.toast-box button{
+background:#ef4444;
+padding:8px 20px;
+border-radius:8px;
+cursor:pointer;
+border:none;
+color:white;
+font-weight:500;
+transition:0.2s;
+}
+
+.toast-box button:hover{
+background:#dc2626;
+transform:scale(1.05);
+}
+
+</style>
+
+</head>
+
+
+<body>
+
+<!-- =========================
+     NAVBAR
+========================= -->
+
+<nav class="w-full p-4 flex justify-between items-center bg-black/20 backdrop-blur-md">
+
+<h1 class="text-2xl font-bold text-indigo-300">
+AI Image Analyzer
+</h1>
+
+{% if session.get("user_email") %}
+
+<div class="space-x-6">
+
+<a href="/dashboard" class="hover:text-indigo-300 transition">
+Dashboard
+</a>
+
+{% if session.get("role") != "admin" %}
+<a href="/upload" class="hover:text-indigo-300 transition">
+Upload
+</a>
+{% endif %}
+
+{% if session.get("role") == "admin" %}
+<a href="/admin" class="text-yellow-300 hover:text-yellow-400 transition">
+Admin
+</a>
+{% endif %}
+
+<a href="javascript:void(0)" onclick="confirmLogout()" class="text-red-300 hover:text-red-400 transition">
+Logout
+</a>
+
+</div>
+
+{% endif %}
+
+</nav>
+
+
+<!-- =========================
+     ERROR MODAL
+========================= -->
+
+
+<!-- ERROR MODAL -->
+
+<div id="errorModal" class="modal">
+
+<div class="modal-content">
+
+<h2 class="text-xl font-bold text-red-400 mb-4">
+Error
+</h2>
+
+<p id="errorText" class="mb-6"></p>
+
+<button onclick="closeModal()"
+class="bg-red-500 hover:bg-red-600 px-6 py-2 rounded-lg">
+OK
+</button>
+
+</div>
+
+</div>
+
+<!-- LOGOUT CONFIRM MODAL -->
+
+<div id="logoutModal" class="modal">
+
+<div class="modal-content">
+
+<h2 class="text-xl font-bold text-yellow-300 mb-4">
+Confirm Logout
+</h2>
+
+<p class="mb-6">
+Are you sure you want to logout?
+</p>
+
+<div class="flex justify-center gap-4">
+
+<button onclick="doLogout()" class="bg-red-500 hover:bg-red-600 px-6 py-2 rounded-lg">
+Yes
+</button>
+
+<button onclick="closeLogoutModal()" class="bg-gray-500 hover:bg-gray-600 px-6 py-2 rounded-lg">
+Cancel
+</button>
+
+</div>
+
+</div>
+
+</div>
+
+<!-- =========================
+     PAGE CONTENT
+========================= -->
+
+<div class="page">
+
+{% block content %}{% endblock %}
+
+</div>
+
+
+<script>
+
+/* SHOW ERROR MODAL */
+
+function closeModal(){
+document.getElementById("errorModal").style.display="none"
+}
+
+function confirmLogout(){
+document.getElementById("logoutModal").style.display = "flex"
+}
+
+function closeLogoutModal(){
+document.getElementById("logoutModal").style.display = "none"
+}
+
+function doLogout(){
+window.location.href = "/logout"
+}
+
+/*
+window.onload = function(){
+
+if(!localStorage.getItem("termsAccepted")){
+document.getElementById("termsModal").style.display="flex"
+}
+
+}
+
+function acceptTerms(){
+localStorage.setItem("termsAccepted","yes")
+document.getElementById("termsModal").style.display="none"
+}
+
+function rejectTerms(){
+window.location.href="/logout"
+}
+*/
+
+
+
+</script>
+
+
+<script src="{{ url_for('static', filename='script.js') }}"></script>
+
+
+<!-- Toast -->
+<div id="toast"
+     class="fixed top-6 right-6 z-50 flex flex-col
+            min-w-[320px] max-w-sm rounded-2xl border
+            backdrop-blur-lg bg-white/10
+            shadow-2xl
+            translate-x-20 opacity-0 pointer-events-none
+            transition-all duration-300 ease-in-out overflow-hidden">
+
+    <div class="flex items-center justify-between px-6 py-4">
+        <div class="flex items-center gap-3">
+            <span id="toastIcon" class="text-xl"></span>
+            <span id="toastMessage"></span>
+        </div>
+
+        <button onclick="hideToast()"
+                class="ml-4 text-lg font-bold opacity-70 hover:opacity-100">
+            ✕
+        </button>
+    </div>
+
+    <!-- Progress Bar -->
+    <div class="h-1 w-full bg-white/10">
+        <div id="toastProgress"
+             class="h-full transition-all duration-[3000ms] ease-linear w-full">
+        </div>
+    </div>
+</div>
+
+
+<!-- TERMS AND CONDITIONS MODAL -->
+<!--
+
+<div id="termsModal" class="modal">
+
+<div class="modal-content">
+
+<h2 class="text-xl font-bold text-yellow-400 mb-4">
+Terms & Conditions
+</h2>
+
+<p class="mb-6 text-gray-300 text-sm">
+By using this website you agree that:
+
+• You will not upload copyrighted content without permission  
+• Images will be analyzed for similarity  
+• The platform stores uploaded images for detection  
+• Misuse may result in account suspension
+</p>
+
+<div class="flex gap-4 justify-center">
+
+<button onclick="acceptTerms()"
+class="bg-green-500 hover:bg-green-600 px-6 py-2 rounded-lg">
+Accept
+</button>
+
+<button onclick="rejectTerms()"
+class="bg-red-500 hover:bg-red-600 px-6 py-2 rounded-lg">
+Reject
+</button>
+
+</div>
+</div>
+</div>
+
+-->
+
+<script>
+
+function showSuccess(event){
+
+event.preventDefault();
+
+const popup = document.getElementById("successPopup");
+
+popup.classList.add("show");
+
+setTimeout(function(){
+
+popup.classList.remove("show");
+
+event.target.submit();
+
+},2000);
+
+}
+
+function showResetSuccess(event){
+
+event.preventDefault();
+
+const popup = document.getElementById("resetSuccessPopup");
+
+popup.classList.add("show");
+
+setTimeout(function(){
+
+popup.classList.remove("show");
+
+event.target.submit();
+
+},2000);
+
+}
+
+</script>
+
+
+<!-- TOAST CONTAINER -->
+<div id="toast-container" class="fixed top-5 right-5 z-50 space-y-3"></div>
+
+<script>
+function showToast(message, type="success") {
+
+    const glassToast = document.getElementById("toast")
+
+    // If glass toast exists → use it
+    if(glassToast){
+
+        const toastMessage = document.getElementById("toastMessage")
+        const toastIcon = document.getElementById("toastIcon")
+        const toastProgress = document.getElementById("toastProgress")
+
+        toastMessage.innerText = message
+
+        if(type === "success"){
+            toastIcon.innerText="✔"
+            toastProgress.style.background="#22c55e"
+        }else{
+            toastIcon.innerText="⚠"
+            toastProgress.style.background="#ef4444"
+        }
+
+        glassToast.classList.remove("translate-x-20","opacity-0","pointer-events-none")
+
+        setTimeout(()=>{
+            glassToast.classList.add("translate-x-20","opacity-0")
+        },3000)
+
+        return
+    }
+
+    // fallback → simple toast (your old one)
+    const container = document.getElementById("toast-container")
+
+    const toast = document.createElement("div")
+
+    toast.className =
+    "px-6 py-3 rounded-lg shadow-lg text-white font-semibold"
+
+    if(type === "success"){
+        toast.classList.add("bg-green-500")
+    }else{
+        toast.classList.add("bg-red-500")
+    }
+
+    toast.innerText = message
+
+    container.appendChild(toast)
+
+    setTimeout(()=>{
+        toast.remove()
+    },3000)
+}
+</script>
+
+<script src="{{ url_for('static', filename='script.js') }}"></script>
+
+</body>
+</html>

@@ -1,0 +1,213 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="max-w-6xl mx-auto mt-10 px-6 fade-in">
+
+    <!-- Header -->
+    <div class="flex justify-between items-center mb-10">
+        <div>
+            <h2 class="text-4xl font-bold text-indigo-300">
+                Welcome, {{ name }} 👋
+            </h2>
+            <p class="text-gray-300 mt-2">{{ email }}</p>
+        </div>
+
+        {% if not is_admin %}
+        <a href="/upload"
+           class="bg-indigo-600 hover:bg-indigo-700 px-6 py-3 rounded-xl font-semibold shadow-lg transition transform hover:scale-105">
+            + Upload New Image
+        </a>
+        {% endif %}
+    </div>
+
+    <!-- IMAGES SECTION -->
+    <div class="glass rounded-2xl p-6 mb-10 shadow-xl">
+        <h3 class="text-xl font-semibold mb-6 text-indigo-200">
+            {% if is_admin %}
+                All Uploaded Images
+            {% else %}
+                Your Uploaded Images
+            {% endif %}
+        </h3>
+
+        {% if images %}
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
+
+            {% for img in images %}
+            <div id="card-{{ img[0]|replace('.', '_') }}"
+                class="bg-white/5 rounded-2xl p-4 text-center
+                hover:bg-white/10 transition duration-300
+                transform hover:-translate-y-2 hover:shadow-2xl">
+
+                <img src="{{ img[0] }}"
+                    class="rounded-xl h-48 w-full object-cover mb-4">
+
+                <p class="text-sm text-gray-300 truncate mb-1">
+                    {% if is_admin %}
+                        {{ img[3] }}
+                    {% else %}
+                        {{ img[2] }}
+                    {% endif %}
+                </p>
+
+                {% if is_admin %}
+                    {% set score = img[2] %}
+                {% else %}
+                    {% set score = img[1] %}
+                {% endif %}
+
+                <p class="text-xs mb-2
+                    {% if score > 70 %}
+                        text-red-400
+                    {% else %}
+                        text-green-400
+                    {% endif %}">
+                    Similarity: {{ score }}%
+                </p>
+
+                {% if is_admin %}
+                <p class="text-xs text-gray-400 mb-4">
+                    Uploaded by: {{ img[1] }}
+                </p>
+                {% endif %}
+
+                <div class="flex justify-center gap-3">
+
+                    <a href="{{ img[0] }}" target="_blank"
+                        class="px-5 py-2 rounded-lg
+                            bg-indigo-600/30 hover:bg-indigo-600
+                            text-indigo-200 hover:text-white
+                            text-sm font-medium transition">
+                        View
+                    </a>
+
+                    <button type="button"
+                        onclick="openModal('{{ img[0] }}')"
+                        class="px-5 py-2 rounded-lg
+                               bg-gradient-to-r from-red-500 to-pink-500
+                               hover:from-red-600 hover:to-pink-600
+                               text-white text-sm font-semibold
+                               shadow-lg transition transform hover:scale-105">
+                        Delete
+                    </button>
+
+                </div>
+
+            </div>
+            {% endfor %}
+
+        </div>
+        {% else %}
+        <div class="text-center py-16 text-gray-400">
+            <p class="text-xl mb-2">No images uploaded yet 📂</p>
+            <p class="text-sm">
+                Upload an image to start AI similarity detection
+            </p>
+        </div>
+        {% endif %}
+    </div>
+
+</div>
+
+<!-- DELETE MODAL -->
+<div id="deleteModal"
+     class="fixed inset-0 bg-black/60 backdrop-blur-sm
+            hidden items-center justify-center z-50">
+
+    <div class="bg-[#0f172a] border border-white/10
+                rounded-2xl p-8 w-96 text-center shadow-2xl">
+
+        <h2 class="text-xl font-semibold text-indigo-300 mb-4">
+            Confirm Deletion
+        </h2>
+
+        <p class="text-gray-300 mb-6">
+            Are you sure you want to delete this image?
+        </p>
+
+        <div class="flex justify-center gap-6">
+
+            <button type="button"
+                    onclick="closeDeleteModal()"
+                    class="px-5 py-2 rounded-lg
+                           bg-gray-600 hover:bg-gray-700
+                           text-white transition">
+                Cancel
+            </button>
+
+            <button type="button"
+                    onclick="confirmDelete()"
+                    class="px-5 py-2 rounded-lg
+                           bg-gradient-to-r from-red-500 to-pink-500
+                           hover:from-red-600 hover:to-pink-600
+                           text-white font-semibold shadow-lg
+                           transition transform hover:scale-105">
+                Delete
+            </button>
+
+        </div>
+
+    </div>
+</div>
+
+<script>
+let selectedFilename = null;
+
+function openModal(filename) {
+    selectedFilename = filename;
+    const modal = document.getElementById("deleteModal");
+    modal.classList.remove("hidden");
+    modal.classList.add("flex");
+}
+
+function closeDeleteModal() {
+    const modal = document.getElementById("deleteModal");
+    modal.classList.add("hidden");
+    modal.classList.remove("flex");
+}
+
+function confirmDelete() {
+
+    fetch("/delete/" + encodeURIComponent(selectedFilename), {
+        method: "POST"
+    })
+    .then(response => response.json())
+    .then(data => {
+
+        if (data.status === "success") {
+
+            const safeId = selectedFilename.replace(/\./g,"_")
+            const card = document.getElementById("card-" + safeId)
+
+            if(card){
+                card.remove()
+            }
+            showToast("Image deleted successfully","success")
+
+            // check if any cards left
+            const cards = document.querySelectorAll("[id^='card-']")
+
+            if(cards.length === 0){
+
+                const container = document.querySelector(".grid")
+
+                container.innerHTML = `
+                <div class="text-center py-16 text-gray-400 col-span-3">
+                    <p class="text-xl mb-2">No images uploaded yet 📂</p>
+                    <p class="text-sm">
+                        Upload an image to start AI similarity detection
+                    </p>
+                </div>
+                `
+            }
+
+        }
+
+        closeDeleteModal()
+
+    })
+}
+
+</script>
+
+{% endblock %}

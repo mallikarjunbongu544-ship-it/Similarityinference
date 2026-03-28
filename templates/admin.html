@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="max-w-7xl mx-auto mt-10 px-6 fade-in">
+
+    <h2 class="text-4xl font-bold text-indigo-300 mb-8">
+        Admin Dashboard 🛠
+    </h2>
+
+    <!-- Stats -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
+        <div class="glass p-6 rounded-2xl text-center">
+            <p class="text-gray-300">Total Users</p>
+            <h3 class="text-3xl font-bold text-indigo-300">{{ total_users }}</h3>
+        </div>
+
+        <div class="glass p-6 rounded-2xl text-center">
+            <p class="text-gray-300">Total Images</p>
+            <h3 class="text-3xl font-bold text-indigo-300">{{ total_images }}</h3>
+        </div>
+    </div>
+
+    <!-- Users Table -->
+    <div class="glass p-6 rounded-2xl mb-10">
+        <h3 class="text-xl font-semibold text-indigo-200 mb-4">Users</h3>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left">
+                <thead>
+                    <tr class="border-b border-white/10">
+                        <th class="py-2">ID</th>
+                        <th>Name</th>
+                        <th>Email</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in users %}
+                    <tr class="border-b border-white/5">
+                        <td class="py-2">{{ user[0] }}</td>
+                        <td>{{ user[1] }}</td>
+                        <td>{{ user[2] }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Images Table -->
+    <div class="glass p-6 rounded-2xl">
+        <h3 class="text-xl font-semibold text-indigo-200 mb-4">All Images</h3>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left">
+                <thead>
+                    <tr class="border-b border-white/10">
+                        <th class="py-2">Filename</th>
+                        <th>Owner</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for img in images %}
+                    <tr class="border-b border-white/5">
+                        <td class="py-2">{{ img[0] }}</td>
+                        <td>{{ img[1] }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}

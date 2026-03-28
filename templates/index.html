@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="flex justify-center items-center h-[85vh]">
+
+<div class="glass p-10 rounded-2xl w-[420px] text-center shadow-2xl">
+
+<h1 class="text-3xl font-bold mb-4 text-indigo-300">
+AI Copyright Detection Platform
+</h1>
+
+<p class="text-gray-300 mb-6">
+Protect your creative work from unauthorized use.
+</p>
+
+<div class="space-y-4">
+
+<a href="/login"
+class="block w-full bg-indigo-600 hover:bg-indigo-700 p-3 rounded-lg font-semibold transition">
+Login
+</a>
+
+<a href="/register"
+class="block w-full bg-green-600 hover:bg-green-700 p-3 rounded-lg font-semibold transition">
+Register
+</a>
+
+</div>
+
+</div>
+
+</div>
+
+{% endblock %}

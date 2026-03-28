@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="max-w-xl mx-auto bg-white p-8 rounded-2xl shadow-xl text-center animate-fade">
+
+
+<h2 class="text-3xl font-bold mb-6 text-indigo-600">
+    Similarity Results
+</h2>
+
+<p class="text-gray-600 mb-2">
+    <b>Uploaded:</b> {{ filename }}
+</p>
+
+<!-- Progress Bar -->
+<div class="w-full bg-gray-200 rounded-full h-6 mt-6 overflow-hidden">
+    <div id="progressBar"
+         class="bg-green-500 h-6 text-white text-sm flex items-center justify-center transition-all duration-1000"
+         style="width:0%">
+        0%
+    </div>
+</div>
+
+<p class="mt-4 text-xl font-semibold text-green-600">
+    Similarity Score: {{ score }} %
+</p>
+
+<a href="/dashboard"
+   class="inline-block mt-8 bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition">
+   Back to Dashboard
+</a>
+
+</div>
+
+<script>
+    // Smooth animation of score
+    let score = Number("{{ score }}");
+    let bar = document.getElementById("progressBar");
+    let width = 0;
+
+    let interval = setInterval(function(){
+        if(width >= score){
+            clearInterval(interval);
+        } else {
+            width++;
+            bar.style.width = width + "%";
+            bar.innerHTML = width + "%";
+        }
+    }, 15);
+</script>
+
+{% endblock %}

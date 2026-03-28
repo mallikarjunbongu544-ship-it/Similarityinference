@@ -1,0 +1,11 @@
+flask
+python-dotenv
+pillow
+numpy
+tensorflow
+opencv-python
+imagehash
+itsdangerous
+cloudinary
+psycopg2-binary
+werkzeug

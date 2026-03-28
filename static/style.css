@@ -1,0 +1,272 @@
+body{
+font-family:'Poppins',sans-serif;
+background:linear-gradient(135deg,#0f172a,#1e293b,#312e81);
+min-height:100vh;
+margin:0;
+overflow-x:hidden;
+color:white;
+}
+
+/* GLASS CARD */
+
+.glass{
+background:rgba(255,255,255,0.08);
+backdrop-filter:blur(14px);
+border:1px solid rgba(255,255,255,0.15);
+box-shadow:0 10px 30px rgba(0,0,0,0.4);
+}
+
+/* PAGE FADE */
+
+.page{
+animation:fade .5s ease;
+}
+
+@keyframes fade{
+from{opacity:0}
+to{opacity:1}
+}
+
+/* =========================
+   TOAST NOTIFICATION
+========================= */
+
+.toast{
+transform:translateX(120%);
+opacity:0;
+transition:all .5s ease;
+}
+
+.toast.show{
+transform:translateX(0);
+opacity:1;
+}
+
+/* =========================
+   PROGRESS BAR
+========================= */
+
+@keyframes progressBar{
+from{width:100%}
+to{width:0%}
+}
+
+.progress{
+animation:progressBar 5s linear forwards;
+}
+
+/* =========================
+   ERROR MODAL
+========================= */
+
+.modal{
+display:none;
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:rgba(0,0,0,0.65);
+align-items:center;
+justify-content:center;
+z-index:999;
+}
+
+.modal-content{
+background:#1e293b;
+padding:30px;
+border-radius:12px;
+text-align:center;
+width:350px;
+animation:blinkGlow 1s infinite alternate;
+border:2px solid red;
+}
+
+@keyframes blinkGlow{
+from{box-shadow:0 0 10px red}
+to{box-shadow:0 0 25px red}
+}
+
+/* =========================
+   FLASH ERROR POPUP
+========================= */
+
+.toast-overlay{
+position:fixed;
+top:0;
+left:0;
+width:100vw;
+height:100vh;
+background:rgba(0,0,0,0.7);
+display:flex;
+justify-content:center;
+align-items:center;
+z-index:9999;
+}
+
+.toast-box{
+background:#1e293b;
+padding:30px;
+border-radius:12px;
+width:350px;
+text-align:center;
+border:2px solid red;
+animation:blinkGlow 1s infinite alternate;
+box-shadow:0 0 15px red;
+}
+
+.toast-box h2{
+font-size:22px;
+margin-bottom:10px;
+font-weight:600;
+color:#f87171;
+}
+
+.toast-box p{
+color:#e5e7eb;
+margin-bottom:20px;
+font-size:15px;
+}
+
+.toast-box button{
+background:#ef4444;
+padding:8px 20px;
+border-radius:8px;
+cursor:pointer;
+border:none;
+color:white;
+font-weight:500;
+transition:0.2s;
+}
+
+.toast-box button:hover{
+background:#dc2626;
+transform:scale(1.05);
+}
+
+
+#toast-container{
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 9999;
+}
+
+.toast{
+    padding: 14px 18px;
+    margin-bottom: 10px;
+    border-radius: 10px;
+    color: white;
+    font-size: 14px;
+    animation: slideIn 0.4s ease;
+}
+
+.toast-success{
+    background:#16a34a;
+}
+
+.toast-error{
+    background:#dc2626;
+}
+
+@keyframes slideIn{
+    from{
+        transform: translateX(100%);
+        opacity:0;
+    }
+    to{
+        transform: translateX(0);
+        opacity:1;
+    }
+}
+
+
+.success-popup{
+position:fixed;
+top:0;
+left:0;
+width:100vw;
+height:100vh;
+background:rgba(0,0,0,0.6);
+display:flex;
+justify-content:center;
+align-items:center;
+opacity:0;
+pointer-events:none;
+transition:0.3s;
+z-index:99999;
+}
+
+.success-popup.show{
+opacity:1;
+pointer-events:auto;
+}
+
+.success-box{
+background:#1f2937;
+padding:35px;
+border-radius:12px;
+text-align:center;
+width:320px;
+color:white;
+}
+
+/* CHECKMARK ANIMATION */
+
+.checkmark-circle{
+width:60px;
+height:60px;
+position:relative;
+display:inline-block;
+margin-bottom:10px;
+}
+
+.background{
+width:60px;
+height:60px;
+border-radius:50%;
+background:#22c55e;
+position:absolute;
+}
+
+.checkmark{
+border-radius:5px;
+}
+
+.checkmark.draw:after{
+animation:checkmark 0.6s ease forwards;
+}
+
+.checkmark:after{
+opacity:0;
+height:30px;
+width:15px;
+border-right:4px solid white;
+border-top:4px solid white;
+position:absolute;
+left:18px;
+top:15px;
+content:'';
+transform-origin:left top;
+transform:scaleX(-1) rotate(135deg);
+}
+
+@keyframes checkmark{
+0%{opacity:0;height:0;width:0;}
+50%{opacity:1;height:0;width:15px;}
+100%{opacity:1;height:30px;width:15px;}
+}
+
+
+body{
+height:100vh;
+margin:0;
+}
+
+.main-container{
+height:100vh;
+display:flex;
+justify-content:center;
+align-items:center;
+}
+

@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="flex justify-center items-center h-[85vh]">
+
+<div class="glass p-10 rounded-2xl w-[380px] text-center shadow-2xl">
+
+<h2 class="text-3xl font-bold mb-6 text-indigo-300">
+Welcome Back..!!
+</h2>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+{% if messages %}
+{% for category, message in messages %}
+
+<div id="flashMessage"
+class="
+{% if category == 'success' %}
+bg-green-500/20 border border-green-400 text-green-300
+{% else %}
+bg-red-500/20 border border-red-400 text-red-300
+{% endif %}
+p-3 rounded-lg mb-4 text-sm animate-pulse transition-opacity duration-500
+">
+{{ message }}
+</div>
+
+{% endfor %}
+{% endif %}
+{% endwith %}
+
+<form method="POST" action="/login" class="space-y-4">
+
+<input
+type="email"
+name="email"
+placeholder="Email"
+list="emailSuggestions"
+class="w-full p-3 rounded-lg bg-white/10 border border-white/20 focus:outline-none focus:border-indigo-400"
+required>
+
+<datalist id="emailSuggestions">
+{% for email in emails %}
+<option value="{{ email }}">
+{% endfor %}
+</datalist>
+
+<div class="relative">
+
+<input
+type="password"
+name="password"
+id="passwordInput"
+placeholder="Password"
+class="w-full p-3 rounded-lg bg-white/10 border border-white/20 focus:outline-none focus:border-indigo-400"
+required>
+
+<button
+type="button"
+onclick="togglePassword()"
+class="absolute right-4 top-3 text-gray-300 hover:text-white">
+👁
+</button>
+
+
+
+<p class="text-sm text-right mt-2">
+<a href="/forgot_password" class="text-blue-400 hover:underline">
+Forgot Password?
+</a>
+</p>
+
+</div>
+
+<button
+type="submit"
+class="w-full bg-indigo-600 hover:bg-indigo-700 transition p-3 rounded-lg font-semibold">
+Login
+</button>
+
+</form>
+
+<p class="mt-6 text-gray-300">
+Don’t have an account?
+<a href="/register" class="text-indigo-300 hover:underline">
+Register
+</a>
+</p>
+
+</div>
+</div>
+
+<script>
+
+function togglePassword(){
+const passwordInput=document.getElementById("passwordInput")
+
+if(passwordInput.type==="password"){
+passwordInput.type="text"
+}else{
+passwordInput.type="password"
+}
+}
+
+// Auto hide flash message after 5 seconds
+setTimeout(function () {
+    const msg = document.getElementById("flashMessage");
+    if (msg) {
+        msg.style.opacity = "0";
+        setTimeout(() => msg.remove(), 500); // remove after fade
+    }
+}, 5000);
+
+</script>
+
+{% endblock %}
