@@ -65,9 +65,15 @@ def highlight_similarity(img1_path, img2_path):
 
 def get_db_connection():
     db_url = os.getenv("DATABASE_URL")
+
     if not db_url:
         print("DATABASE_URL missing")
         return None
+
+    # Fix for postgres:// issue (safe)
+    if db_url.startswith("postgres://"):
+        db_url = db_url.replace("postgres://", "postgresql://", 1)
+
     return psycopg2.connect(db_url)
 
 cloudinary.config(
