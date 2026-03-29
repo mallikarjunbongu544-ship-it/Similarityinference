@@ -26,7 +26,7 @@ import psycopg2
 UPLOAD_FOLDER = "uploads"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-def highlight_similarity(img1_path, img2_path):
+"""def highlight_similarity(img1_path, img2_path):
 
     img1 = cv2.imread(img1_path)
     img2 = cv2.imread(img2_path)
@@ -197,7 +197,7 @@ def detect_logo_inside(upload_path, existing_path):
     if len(good) > 30:
         return True
 
-    return False
+    return False"""
 
 
 def send_email(to_email, subject, message):
@@ -626,37 +626,32 @@ def upload_file():
 
     for url, email, emb, img_hash, lbl in all_uploads:
 
-        # ⚠️ Since we don’t have local files now → skip ORB/logo
-        # (no logic change, just cannot run without local file)
-        # 🔥 DOWNLOAD EXISTING IMAGE TEMPORARILY
-        combined_score = score
-
         existing_temp = None
 
-    try:
-        response = requests.get(url, stream=True)
-        existing_temp = f"temp_existing_{random.randint(1000,9999)}.jpg"
+        try:
+            response = requests.get(url, stream=True)
+            existing_temp = f"temp_existing_{random.randint(1000,9999)}.jpg"
 
-        with open(existing_temp, "wb") as f:
-            for chunk in response.iter_content(1024):
-                f.write(chunk)
+            with open(existing_temp, "wb") as f:
+                for chunk in response.iter_content(1024):
+                    f.write(chunk)
 
-        existing_embedding = pickle.loads(emb)
-        score = cosine_similarity(new_embedding, existing_embedding)
+            existing_embedding = pickle.loads(emb)
+            score = cosine_similarity(new_embedding, existing_embedding)
 
-        combined_score = score
+            #combined_score = score   # ✅ correct
 
-        if combined_score > highest_score:
-            highest_score = combined_score
-            matched_filename = url
-            matched_user = email
+            if combined_score > highest_score:
+                highest_score = combined_score
+                matched_filename = url
+                matched_user = email
 
-    except Exception as e:
-        print("Error:", e)
+        except Exception as e:
+            print("Error:", e)
 
-    finally:
-        if existing_temp and os.path.exists(existing_temp):
-            os.remove(existing_temp)
+        finally:
+            if existing_temp and os.path.exists(existing_temp):
+                os.remove(existing_temp)
 
     similarity_score = int(highest_score * 100)
 
