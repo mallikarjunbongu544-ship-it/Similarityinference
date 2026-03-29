@@ -64,7 +64,11 @@ def highlight_similarity(img1_path, img2_path):
     return output_path
 
 def get_db_connection():
-    return psycopg2.connect(os.getenv("DATABASE_URL"))
+    db_url = os.getenv("DATABASE_URL")
+    if not db_url:
+        print("DATABASE_URL missing")
+        return None
+    return psycopg2.connect(db_url)
 
 cloudinary.config(
     cloud_name=os.getenv("CLOUD_NAME"),
@@ -228,6 +232,9 @@ def allowed_file(filename):
 @app.route("/")
 def home():
     conn = get_db_connection()
+    if conn is None:
+        return "Database connection failed"
+
     cursor = conn.cursor()
 
     cursor.execute("SELECT email FROM users")
@@ -699,4 +706,6 @@ def clear_db():
     return "DB Cleared"
 
 if __name__ == "__main__":
-    app.run()
+    import os
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)
