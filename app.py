@@ -26,7 +26,7 @@ import psycopg2
 UPLOAD_FOLDER = "uploads"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-"""def highlight_similarity(img1_path, img2_path):
+def highlight_similarity(img1_path, img2_path):
 
     img1 = cv2.imread(img1_path)
     img2 = cv2.imread(img2_path)
@@ -65,7 +65,7 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
     cv2.imwrite(output_path, result)
 
     return output_path
-"""
+
 def get_db_connection():
     db_url = os.getenv("DATABASE_URL")
 
@@ -98,7 +98,7 @@ def get_model():
         model = MobileNetV2(weights="imagenet", include_top=False, pooling="avg")
     return model
 
-"""# ---------------- UTILITY FUNCTIONS ----------------
+# ---------------- UTILITY FUNCTIONS ----------------
 def cosine_similarity(a, b):
     return np.dot(a, b) / (norm(a) * norm(b))
 def get_image_hash(img_path):
@@ -197,7 +197,7 @@ def detect_logo_inside(upload_path, existing_path):
     if len(good) > 30:
         return True
 
-    return False """
+    return False 
 
 
 def send_email(to_email, subject, message):
@@ -601,9 +601,10 @@ def upload_file():
     try:
         new_embedding = get_embedding(temp_path)
         new_hash = get_image_hash(temp_path)
-    except Exception:
+    except Exception as e:
+        print("UPLOAD ERROR:", e)
         os.remove(temp_path)
-        return jsonify({"status": "error", "message": "Invalid image file"})
+        return jsonify({"status": "error", "message": str(e)})
 
     embedding_blob = pickle.dumps(new_embedding)
 
@@ -698,8 +699,12 @@ def upload_file():
 
 
     # ✅ UPLOAD for unique + borderline
-    upload_result = cloudinary.uploader.upload(temp_path)
-    image_url = upload_result["secure_url"]
+    try:
+        upload_result = cloudinary.uploader.upload(temp_path)
+        image_url = upload_result["secure_url"]
+    except Exception as e:
+        print("CLOUDINARY ERROR:", e)
+        return jsonify({"status": "error", "message": "Cloud upload failed"})
 
     # delete temp file
     os.remove(temp_path)
@@ -722,7 +727,10 @@ def upload_file():
 @app.route("/clear_db")
 def clear_db():
     conn = get_db_connection()
-    cur = conn.cursor()
+    if conn is None:
+        return jsonify({"status": "error", "message": "DB connection failed"})
+
+    cursor = conn.cursor()
 
     cur.execute("TRUNCATE TABLE uploads RESTART IDENTITY CASCADE")
     cur.execute("TRUNCATE TABLE users RESTART IDENTITY CASCADE")
