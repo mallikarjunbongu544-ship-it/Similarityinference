@@ -719,29 +719,34 @@ def init_db():
 
     cur = conn.cursor()
 
+    # USERS TABLE
     cur.execute("""
-    CREATE TABLE IF NOT EXISTS users (
-        id SERIAL PRIMARY KEY,
-        name TEXT,
-        email TEXT UNIQUE,
-        password TEXT
-    );
+        CREATE TABLE IF NOT EXISTS users (
+            id SERIAL PRIMARY KEY,
+            name TEXT,
+            email TEXT UNIQUE,
+            password TEXT
+        )
+    """)
 
-    CREATE TABLE IF NOT EXISTS uploads (
-        id SERIAL PRIMARY KEY,
-        image_url TEXT,
-        user_email TEXT,
-        score INT,
-        embedding BYTEA,
-        image_hash TEXT,
-        label TEXT
-    );
+    # UPLOADS TABLE
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS uploads (
+            id SERIAL PRIMARY KEY,
+            image_url TEXT,
+            user_email TEXT,
+            score INT,
+            embedding BYTEA,
+            image_hash TEXT,
+            label TEXT
+        )
     """)
 
     conn.commit()
     conn.close()
 
     return "Tables created successfully!"
+
 
 if __name__ == "__main__":
     import os
