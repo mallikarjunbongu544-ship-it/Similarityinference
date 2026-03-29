@@ -279,45 +279,71 @@ def register():
 
     return render_template("register.html", error=error)
 
-@app.route("/login", methods=["GET","POST"])
+@app.route("/login", methods=["GET", "POST"])
 def login():
 
+    # ---------------- GET REQUEST ----------------
     if request.method == "GET":
         conn = get_db_connection()
         cursor = conn.cursor()
+
         cursor.execute("SELECT email FROM users")
         emails = [row[0] for row in cursor.fetchall()]
+
         conn.close()
 
         return render_template("login.html", emails=emails)
 
+    # ---------------- POST REQUEST ----------------
     email = request.form.get("email")
     password = request.form.get("password")
 
-    # Admin login
+    # 🔐 Admin login (hardcoded)
     if email == "similarityinference.ai@gmail.com" and password == "similarityinference.ai":
         session["user_email"] = email
         session["user_name"] = "Admin"
         session["role"] = "admin"
         return redirect("/admin")
 
+    # ---------------- USER LOGIN ----------------
     conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute(
-        "SELECT name, email, password FROM users WHERE email=%s",
-        (email,)
-    )
-    user = cursor.fetchone()
-    conn.close()
-
-    if user and check_password_hash(user[2], password):
-        session["user_email"] = user[1]
-        session["user_name"] = user[0]
-        session["role"] = "user"
-        return redirect("/dashboard")
-    else:
-        flash("Invalid email or password", "error")
+    if conn is None:
+        flash("Database connection failed", "error")
         return redirect("/login")
+
+    cursor = conn.cursor()
+
+    try:
+        # Get user by email only
+        cursor.execute(
+            "SELECT id, name, email, password FROM users WHERE email=%s",
+            (email,)
+        )
+        user = cursor.fetchone()
+
+        print("Fetched user:", user)  # 🔍 Debug log
+
+        # ✅ Check password properly
+        if user and check_password_hash(user[3], password):
+            session["user_email"] = user[2]
+            session["user_name"] = user[1]
+            session["role"] = "user"
+
+            print("Login success")  # 🔍 Debug
+            return redirect("/dashboard")
+
+        else:
+            print("Login failed")  # 🔍 Debug
+            flash("Invalid email or password", "error")
+            return redirect("/login")
+
+    except Exception as e:
+        print("Login error:", e)
+        flash("Something went wrong", "error")
+        return redirect("/login")
+
+    finally:
+        conn.close()
 
 @app.route("/dashboard")
 def dashboard():
