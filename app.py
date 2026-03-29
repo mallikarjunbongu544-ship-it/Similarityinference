@@ -65,7 +65,7 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
     cv2.imwrite(output_path, result)
 
     return output_path
-
+"""
 def get_db_connection():
     db_url = os.getenv("DATABASE_URL")
 
@@ -98,7 +98,7 @@ def get_model():
         model = MobileNetV2(weights="imagenet", include_top=False, pooling="avg")
     return model
 
-# ---------------- UTILITY FUNCTIONS ----------------
+"""# ---------------- UTILITY FUNCTIONS ----------------
 def cosine_similarity(a, b):
     return np.dot(a, b) / (norm(a) * norm(b))
 def get_image_hash(img_path):
@@ -197,7 +197,7 @@ def detect_logo_inside(upload_path, existing_path):
     if len(good) > 30:
         return True
 
-    return False"""
+    return False """
 
 
 def send_email(to_email, subject, message):
@@ -639,7 +639,7 @@ def upload_file():
             existing_embedding = pickle.loads(emb)
             score = cosine_similarity(new_embedding, existing_embedding)
 
-            #combined_score = score   # ✅ correct
+            combined_score = score   # ✅ correct
 
             if combined_score > highest_score:
                 highest_score = combined_score
