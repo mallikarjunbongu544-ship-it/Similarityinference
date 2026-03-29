@@ -711,6 +711,38 @@ def clear_db():
     conn.close()
     return "DB Cleared"
 
+@app.route("/init_db")
+def init_db():
+    conn = get_db_connection()
+    if conn is None:
+        return "DB connection failed"
+
+    cur = conn.cursor()
+
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS users (
+        id SERIAL PRIMARY KEY,
+        name TEXT,
+        email TEXT UNIQUE,
+        password TEXT
+    );
+
+    CREATE TABLE IF NOT EXISTS uploads (
+        id SERIAL PRIMARY KEY,
+        image_url TEXT,
+        user_email TEXT,
+        score INT,
+        embedding BYTEA,
+        image_hash TEXT,
+        label TEXT
+    );
+    """)
+
+    conn.commit()
+    conn.close()
+
+    return "Tables created successfully!"
+
 if __name__ == "__main__":
     import os
     port = int(os.environ.get("PORT", 5000))
