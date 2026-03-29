@@ -1,3 +1,6 @@
+import tensorflow as tf
+tf.config.threading.set_intra_op_parallelism_threads(1)
+tf.config.threading.set_inter_op_parallelism_threads(1)
 from dotenv import load_dotenv
 import os
 import requests
@@ -10,7 +13,7 @@ from email.mime.text import MIMEText
 import os, random, pickle
 import numpy as np
 from numpy.linalg import norm
-from tensorflow.keras.applications.resnet50 import ResNet50, preprocess_input
+from tensorflow.keras.applications.mobilenet_v2 import MobileNetV2, preprocess_input
 from tensorflow.keras.preprocessing import image
 import imagehash
 from itsdangerous import URLSafeTimedSerializer
@@ -92,7 +95,7 @@ model = None
 def get_model():
     global model
     if model is None:
-        model = ResNet50(weights="imagenet", include_top=False, pooling="avg")
+        model = MobileNetV2(weights="imagenet", include_top=False, pooling="avg")
     return model
 
 # ---------------- UTILITY FUNCTIONS ----------------
@@ -124,7 +127,7 @@ def get_embedding(img_path):
     img = Image.open(img_path)
     img = ImageOps.exif_transpose(img)
     img = img.convert("RGB")
-    img = img.resize((224,224))
+    img = img.resize((160,160))  # smaller = less memory
 
     img_array = np.array(img)
     img_array = np.expand_dims(img_array, axis=0)
@@ -607,7 +610,12 @@ def upload_file():
     conn = get_db_connection()
     cursor = conn.cursor()
 
-    cursor.execute("SELECT image_url, user_email, embedding, image_hash, label FROM uploads")
+    cursor.execute("""
+        SELECT image_url, user_email, embedding, image_hash, label 
+        FROM uploads 
+        ORDER BY id DESC 
+        LIMIT 20
+    """)
     all_uploads = cursor.fetchall()
 
     highest_score = 0
@@ -621,46 +629,34 @@ def upload_file():
         # ⚠️ Since we don’t have local files now → skip ORB/logo
         # (no logic change, just cannot run without local file)
         # 🔥 DOWNLOAD EXISTING IMAGE TEMPORARILY
-        combined_score = 0
+        combined_score = score
 
-        try:
-            response = requests.get(url)
-            existing_temp = f"temp_existing_{random.randint(1000,9999)}.jpg"
+        existing_temp = None
 
-            with open(existing_temp, "wb") as f:
-                f.write(response.content)
+    try:
+        response = requests.get(url, stream=True)
+        existing_temp = f"temp_existing_{random.randint(1000,9999)}.jpg"
 
-            existing_embedding = pickle.loads(emb)
-            score = cosine_similarity(new_embedding, existing_embedding)
+        with open(existing_temp, "wb") as f:
+            for chunk in response.iter_content(1024):
+                f.write(chunk)
 
-            orb_score = orb_similarity(temp_path, existing_temp)
+        existing_embedding = pickle.loads(emb)
+        score = cosine_similarity(new_embedding, existing_embedding)
 
-            temp_highlight_url = None   # ✅ ALWAYS initialize
+        combined_score = score
 
-            if orb_score > 0.2:
+        if combined_score > highest_score:
+            highest_score = combined_score
+            matched_filename = url
+            matched_user = email
 
-                highlighted_path = highlight_similarity(temp_path, existing_temp)
+    except Exception as e:
+        print("Error:", e)
 
-                if highlighted_path:
-                    upload_highlight = cloudinary.uploader.upload(highlighted_path)
-                    temp_highlight_url = upload_highlight["secure_url"]
-                    os.remove(highlighted_path)
-
-                # ✅ Combine scores properly
-                combined_score = score
-
-                if orb_score > 0.2:
-                    combined_score = (0.6 * score) + (0.4 * orb_score)
-
-            if combined_score > highest_score:
-                highest_score = combined_score
-                matched_filename = url
-                matched_user = email
-                highlight_url = temp_highlight_url
-            os.remove(existing_temp)   # ✅ ALWAYS DELETE
-
-        except Exception as e:
-            print("ORB failed:", e)
+    finally:
+        if existing_temp and os.path.exists(existing_temp):
+            os.remove(existing_temp)
 
     similarity_score = int(highest_score * 100)
 
