@@ -304,20 +304,20 @@ def login():
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute(
-        "SELECT name,email FROM users WHERE email=%s AND password=%s",
-        (email,password)
+        "SELECT name, email, password FROM users WHERE email=%s",
+        (email,)
     )
     user = cursor.fetchone()
     conn.close()
 
-    if user:
+    if user and check_password_hash(user[2], password):
         session["user_email"] = user[1]
         session["user_name"] = user[0]
         session["role"] = "user"
         return redirect("/dashboard")
-
-    flash("Invalid email or password", "error")
-    return redirect("/login")
+    else:
+        flash("Invalid email or password", "error")
+        return redirect("/login")
 
 @app.route("/dashboard")
 def dashboard():
@@ -706,10 +706,14 @@ def upload_file():
 def clear_db():
     conn = get_db_connection()
     cur = conn.cursor()
-    cur.execute("TRUNCATE TABLE uploads")
+
+    cur.execute("TRUNCATE TABLE uploads RESTART IDENTITY CASCADE")
+    cur.execute("TRUNCATE TABLE users RESTART IDENTITY CASCADE")
+
     conn.commit()
     conn.close()
-    return "DB Cleared"
+
+    return "Database fully cleared!"
 
 @app.route("/init_db")
 def init_db():
