@@ -309,6 +309,46 @@ function closeDuplicateModal(){
     modal.classList.add("hidden")
 }
 
+function uploadFile(){
+
+    const form = document.getElementById("uploadForm");
+    const formData = new FormData(form);
+
+    const analyzeBtn = document.getElementById("analyzeBtn");
+    const btnText = document.getElementById("btnText");
+
+    analyzeBtn.disabled = true;
+    btnText.textContent = "Analyzing...";
+
+    fetch("/upload", {
+        method: "POST",
+        body: formData
+    })
+    .then(res => res.json())
+    .then(data => {
+
+        if(data.status === "duplicate"){
+            openDuplicateModal(data.score, data.highlight);
+        }
+        else if(data.status === "unique" || data.status === "borderline"){
+            showToast("Image uploaded successfully", "success");
+            setTimeout(() => {
+                window.location.href = "/dashboard";
+            }, 1200);
+        }
+        else if(data.status === "error"){
+            showError(data.message);
+        }
+
+        resetButton();
+    })
+    .catch(err => {
+        console.error(err);
+        showError("Upload failed");
+        resetButton();
+    });
+}
+
 </script>
 
 {% endblock %}

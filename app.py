@@ -690,7 +690,9 @@ def upload_file():
 
     similarity_score = int(highest_score * 100)
 
-    if similarity_score < 60:
+    if highest_score == 0:
+        similarity_status = "unique"
+    elif similarity_score < 60:
         similarity_status = "unique"
     elif similarity_score < 75:
         similarity_status = "borderline"
