@@ -97,13 +97,18 @@ cloudinary.config(
 SIMILARITY_THRESHOLD = 0.80
 ADMIN_EMAIL = "24h51a05r1@cmrcet.ac.in"
 
-# Load ResNet model
-model = None
+print("Loading AI model...")
+
+model = MobileNetV2(
+    weights="imagenet",
+    include_top=False,
+    pooling="avg",
+    alpha=0.35
+)
+
+print("AI Model Loaded Successfully")
 
 def get_model():
-    global model
-    if model is None:
-        model = MobileNetV2(weights="imagenet", include_top=False, pooling="avg", alpha=0.35)
     return model
 
 # ---------------- UTILITY FUNCTIONS ----------------
@@ -135,7 +140,7 @@ def get_embedding(img_path):
     img = Image.open(img_path)
     img = ImageOps.exif_transpose(img)
     img = img.convert("RGB")
-    img = img.resize((160,160))  # smaller = less memory
+    img = img.resize((128,128))  # smaller = less memory
 
     img_array = np.array(img)
     img_array = np.expand_dims(img_array, axis=0)
@@ -644,7 +649,7 @@ def upload_file():
         SELECT image_url, user_email, embedding, image_hash, label 
         FROM uploads 
         ORDER BY id DESC 
-        LIMIT 2
+        LIMIT 1
     """)
     all_uploads = cursor.fetchall()
 
@@ -673,15 +678,7 @@ def upload_file():
 
             combined_score = score
 
-            # Generate highlight
-            highlight_path = highlight_similarity(temp_path, existing_temp)
-
-            if highlight_path:
-                upload_highlight = cloudinary.uploader.upload(highlight_path)
-                highlight_url = upload_highlight["secure_url"]
-
-                if os.path.exists(highlight_path):
-                    os.remove(highlight_path)
+            highlight_url = None
 
             if combined_score > highest_score:
                 highest_score = combined_score
@@ -714,7 +711,7 @@ def upload_file():
             send_email(
                 matched_user,
                 "⚠ Copyright Alert",
-                f"Your image is {similarity_score}% similar to a new upload."
+                f"Your image is {similarity_score}% similar."
             )
 
             send_email(
@@ -722,9 +719,8 @@ def upload_file():
                 "⚠ Copyright Warning",
                 f"Your upload is {similarity_score}% similar."
             )
-
-        except Exception as e:
-            print("Email failed:", e)
+        except:
+            pass
 
         if os.path.exists(temp_path):
             os.remove(temp_path)
