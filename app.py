@@ -9,7 +9,6 @@ tf.config.threading.set_intra_op_parallelism_threads(1)
 tf.config.threading.set_inter_op_parallelism_threads(1)
 from dotenv import load_dotenv
 from urllib.parse import urlparse
-import os
 import gc
 import requests
 load_dotenv()
@@ -18,7 +17,7 @@ from PIL import Image, ImageOps
 from flask import Flask, render_template, request, redirect, session, send_from_directory, url_for, flash, jsonify
 import smtplib
 from email.mime.text import MIMEText
-import os, random, pickle
+import random, pickle
 import numpy as np
 from numpy.linalg import norm
 from tensorflow.keras.applications.mobilenet_v2 import MobileNetV2, preprocess_input
@@ -38,7 +37,8 @@ def highlight_similarity(img1_path, img2_path):
 
     img1 = cv2.imread(img1_path)
     img2 = cv2.imread(img2_path)
-
+    if img1 is None or img2 is None:
+        return None
     gray1 = cv2.cvtColor(img1, cv2.COLOR_BGR2GRAY)
     gray2 = cv2.cvtColor(img2, cv2.COLOR_BGR2GRAY)
 
@@ -103,7 +103,7 @@ model = None
 def get_model():
     global model
     if model is None:
-        model = MobileNetV2(weights="imagenet", include_top=False, pooling="avg")
+        model = MobileNetV2(weights="imagenet", include_top=False, pooling="avg", alpha=0.35)
     return model
 
 # ---------------- UTILITY FUNCTIONS ----------------
@@ -218,16 +218,16 @@ def send_email(to_email, subject, message):
         return
 
     try:
-        msg = MIMEText(message)
-        msg["Subject"] = subject
-        msg["From"] = sender_email
-        msg["To"] = to_email
+        with smtplib.SMTP("smtp.gmail.com", 587, timeout=10) as server:
+            server.starttls()
+            server.login(sender_email, sender_password)
+            
+            msg = MIMEText(message)
+            msg["Subject"] = subject
+            msg["From"] = sender_email
+            msg["To"] = to_email
 
-        server = smtplib.SMTP("smtp.gmail.com", 587)
-        server.starttls()
-        server.login(sender_email, sender_password)
-        server.sendmail(sender_email, to_email, msg.as_string())
-        server.quit()
+            server.sendmail(sender_email, to_email, msg.as_string())
 
     except Exception as e:
         print("Email failed:", e)
@@ -644,7 +644,7 @@ def upload_file():
         SELECT image_url, user_email, embedding, image_hash, label 
         FROM uploads 
         ORDER BY id DESC 
-        LIMIT 5
+        LIMIT 2
     """)
     all_uploads = cursor.fetchall()
 
@@ -659,7 +659,7 @@ def upload_file():
         existing_temp = None
 
         try:
-            response = requests.get(url, timeout=10)
+            response = requests.get(url, timeout=10, stream=True)
             existing_temp = f"temp_existing_{random.randint(1000,9999)}.jpg"
 
             with open(existing_temp, "wb") as f:
@@ -694,6 +694,7 @@ def upload_file():
         finally:
             if existing_temp and os.path.exists(existing_temp):
                 os.remove(existing_temp)
+    gc.collect()
 
     similarity_score = int(highest_score * 100)
 
@@ -809,6 +810,5 @@ def init_db():
 
 
 if __name__ == "__main__":
-    import os
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
