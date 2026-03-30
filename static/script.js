@@ -77,7 +77,16 @@ function uploadFile() {
 
         if(response.status === "duplicate"){
 
-            openDuplicateModal();
+            showToast("Duplicate image detected (" + response.score + "% similar)", "error");
+
+            progressBar.classList.remove("bg-indigo-500");
+            progressBar.classList.add("bg-red-500");
+            progressText.textContent = "Duplicate Found ❌";
+
+            setTimeout(function () {
+                window.location.href = "/dashboard";
+            }, 2000);
+
             resetButton();
             return;
 
