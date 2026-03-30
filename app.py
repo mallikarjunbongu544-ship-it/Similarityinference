@@ -1,6 +1,6 @@
 import os
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
-
+os.environ["TF_FORCE_GPU_ALLOW_GROWTH"] = "true"
 import tensorflow as tf
 tf.get_logger().setLevel('ERROR')
 
@@ -42,7 +42,7 @@ def highlight_similarity(img1_path, img2_path):
     gray1 = cv2.cvtColor(img1, cv2.COLOR_BGR2GRAY)
     gray2 = cv2.cvtColor(img2, cv2.COLOR_BGR2GRAY)
 
-    orb = cv2.ORB_create(500)
+    orb = cv2.ORB_create(200)
 
     kp1, des1 = orb.detectAndCompute(gray1, None)
     kp2, des2 = orb.detectAndCompute(gray2, None)
@@ -140,7 +140,7 @@ def get_embedding(img_path):
     img = Image.open(img_path)
     img = ImageOps.exif_transpose(img)
     img = img.convert("RGB")
-    img = img.resize((128,128))  # smaller = less memory
+    img = img.resize((96,96))  # smaller = less memory
 
     img_array = np.array(img)
     img_array = np.expand_dims(img_array, axis=0)
@@ -149,6 +149,8 @@ def get_embedding(img_path):
 
     model = get_model()
     embedding = model(img_array, training=False).numpy()
+    del img_array
+    gc.collect()
 
     return embedding.flatten()
 
@@ -163,7 +165,7 @@ def orb_similarity(img1_path, img2_path):
     if img1 is None or img2 is None:
         return 0
 
-    orb = cv2.ORB_create(1000)
+    orb = cv2.ORB_create(300)
 
     kp1, des1 = orb.detectAndCompute(img1, None)
     kp2, des2 = orb.detectAndCompute(img2, None)
@@ -190,7 +192,7 @@ def detect_logo_inside(upload_path, existing_path):
     if img1 is None or img2 is None:
         return False
 
-    orb = cv2.ORB_create(1000)
+    orb = cv2.ORB_create(300)
 
     kp1, des1 = orb.detectAndCompute(img1, None)
     kp2, des2 = orb.detectAndCompute(img2, None)
@@ -644,7 +646,7 @@ def upload_file():
         SELECT image_url, user_email, embedding, image_hash, label 
         FROM uploads 
         ORDER BY id DESC 
-        LIMIT 10
+        LIMIT 3
     """)
     all_uploads = cursor.fetchall()
 
@@ -660,7 +662,7 @@ def upload_file():
         existing_temp = None
 
         try:
-            response = requests.get(url, timeout=10, stream=True)
+            response = requests.get(url, timeout=5, stream=True)
             existing_temp = f"temp_existing_{random.randint(1000,9999)}.jpg"
 
             with open(existing_temp, "wb") as f:
@@ -702,7 +704,7 @@ def upload_file():
         finally:
             if existing_temp and os.path.exists(existing_temp):
                 os.remove(existing_temp)
-    gc.collect()
+            gc.collect()
 
     similarity_score = int(highest_score * 100)
 
