@@ -219,7 +219,6 @@ def detect_logo_inside(upload_path, existing_path):
 
 
 def send_email(to_email, subject, message):
-
     try:
         sg = SendGridAPIClient(os.getenv("SENDGRID_API_KEY"))
 
@@ -230,12 +229,12 @@ def send_email(to_email, subject, message):
             plain_text_content=message
         )
 
-        sg.send(email)
+        response = sg.send(email)
 
-        print("Email sent successfully")
+        print("Email sent successfully:", response.status_code)
 
     except Exception as e:
-        print("Email failed:", e)
+        print("Email failed:", str(e))
 # ---------------- APP ----------------
 app = Flask(__name__)
 app.secret_key = os.getenv("SECRET_KEY", os.urandom(24))
