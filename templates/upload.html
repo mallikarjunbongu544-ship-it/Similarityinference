@@ -357,7 +357,7 @@ function uploadFile(){
                 openDuplicateModal(data.score, data.highlight)
             }
             else if(data.status === "borderline"){
-                showToast("⚠ " + data.score + "% similar (Borderline)", "warning")
+                showToast("⚠ " + data.score + "% similar (Borderline)", "error")
             }
             else if(data.status === "unique"){
                 showToast("✅ " + data.score + "% similar (Unique Image)", "success")
