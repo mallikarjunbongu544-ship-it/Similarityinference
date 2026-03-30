@@ -644,7 +644,7 @@ def upload_file():
         SELECT image_url, user_email, embedding, image_hash, label 
         FROM uploads 
         ORDER BY id DESC 
-        LIMIT 1
+        LIMIT 10
     """)
     all_uploads = cursor.fetchall()
 
@@ -653,6 +653,7 @@ def upload_file():
     matched_user = None
     highlight_url = None
     orb_score = 0
+    best_highlight = None
 
     for url, email, emb, img_hash, lbl in all_uploads:
 
@@ -669,16 +670,31 @@ def upload_file():
             new_hash_obj = imagehash.hex_to_hash(new_hash)
 
             distance = new_hash_obj - existing_hash
-            score = 1 - (distance / 64)
+            phash_score = 1 - (distance / 64)
 
-            combined_score = score
+            # 🔥 ADD THIS LINE
+            orb_score = orb_similarity(temp_path, existing_temp)
 
-            highlight_url = None
+            # 🔥 FINAL COMBINED SCORE
+            combined_score = (phash_score * 0.6) + (orb_score * 0.4)
+
+            highlight_path = highlight_similarity(temp_path, existing_temp)
+
+            current_highlight = None   # 🔥 use temp variable
+
+            if highlight_path:
+                try:
+                    upload_res = cloudinary.uploader.upload(highlight_path)
+                    current_highlight = upload_res["secure_url"]
+                    os.remove(highlight_path)
+                except:
+                    current_highlight = None
 
             if combined_score > highest_score:
                 highest_score = combined_score
                 matched_filename = url
                 matched_user = email
+                best_highlight = current_highlight   # 🔥 SAVE BEST ONE
 
         except Exception as e:
             print("Error:", e)
@@ -730,7 +746,7 @@ def upload_file():
             "score": similarity_score,   # ✅ NOW ALWAYS DEFINED
             "filename": matched_filename,
             "owner": matched_user,
-            "highlight": highlight_url
+            "highlight": best_highlight   # 🔥 IMPORTANT
         })
 
 
