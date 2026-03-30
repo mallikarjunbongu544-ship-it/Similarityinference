@@ -643,11 +643,13 @@ def upload_file():
                 for chunk in response.iter_content(1024):
                     f.write(chunk)
 
-            eexisting_hash = imagehash.hex_to_hash(img_hash)
+            existing_hash = imagehash.hex_to_hash(img_hash)
             new_hash_obj = imagehash.hex_to_hash(new_hash)
 
             distance = new_hash_obj - existing_hash
             score = 1 - (distance / 64)
+
+            combined_score = score
 
             if combined_score > highest_score:
                 highest_score = combined_score
