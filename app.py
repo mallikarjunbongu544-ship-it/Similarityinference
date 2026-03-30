@@ -260,12 +260,7 @@ def home():
 
     cursor = conn.cursor()
 
-    cursor.execute("SELECT email FROM users")
-    emails = [row[0] for row in cursor.fetchall()]
-
-    conn.close()
-
-    return render_template("login.html", emails=emails)
+    return render_template("login.html")
 
 
 @app.route('/register', methods=['GET', 'POST'])

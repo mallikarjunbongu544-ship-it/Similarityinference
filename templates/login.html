@@ -35,15 +35,9 @@ p-3 rounded-lg mb-4 text-sm animate-pulse transition-opacity duration-500
 type="email"
 name="email"
 placeholder="Email"
-list="emailSuggestions"
 class="w-full p-3 rounded-lg bg-white/10 border border-white/20 focus:outline-none focus:border-indigo-400"
 required>
 
-<datalist id="emailSuggestions">
-{% for email in emails %}
-<option value="{{ email }}">
-{% endfor %}
-</datalist>
 
 <div class="relative">
 
