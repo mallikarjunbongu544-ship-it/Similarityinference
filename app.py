@@ -19,6 +19,8 @@ import smtplib
 from email.mime.text import MIMEText
 import random, pickle
 import numpy as np
+from sendgrid import SendGridAPIClient
+from sendgrid.helpers.mail import Mail
 from numpy.linalg import norm
 from tensorflow.keras.applications.mobilenet_v2 import MobileNetV2, preprocess_input
 from tensorflow.keras.preprocessing import image
@@ -217,24 +219,20 @@ def detect_logo_inside(upload_path, existing_path):
 
 
 def send_email(to_email, subject, message):
-    sender_email = os.getenv("EMAIL_USER")
-    sender_password = os.getenv("EMAIL_PASS")
-
-    if not sender_email or not sender_password:
-        print("Email config missing")
-        return
 
     try:
-        with smtplib.SMTP("smtp.gmail.com", 587, timeout=10) as server:
-            server.starttls()
-            server.login(sender_email, sender_password)
-            
-            msg = MIMEText(message)
-            msg["Subject"] = subject
-            msg["From"] = sender_email
-            msg["To"] = to_email
+        sg = SendGridAPIClient(os.getenv("SENDGRID_API_KEY"))
 
-            server.sendmail(sender_email, to_email, msg.as_string())
+        email = Mail(
+            from_email="similarityinference.ai@gmail.com",
+            to_emails=to_email,
+            subject=subject,
+            plain_text_content=message
+        )
+
+        sg.send(email)
+
+        print("Email sent successfully")
 
     except Exception as e:
         print("Email failed:", e)
