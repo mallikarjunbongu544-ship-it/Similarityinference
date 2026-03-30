@@ -3,6 +3,8 @@ tf.config.threading.set_intra_op_parallelism_threads(1)
 tf.config.threading.set_inter_op_parallelism_threads(1)
 from dotenv import load_dotenv
 import os
+from urllib.parse import urlparse
+import os
 import requests
 load_dotenv()
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -134,7 +136,7 @@ def get_embedding(img_path):
 
     img_array = preprocess_input(img_array)
 
-    embedding = get_model().predict(img_array)
+    embedding = get_model().predict(img_array, verbose=0)
 
     return embedding.flatten()
 
@@ -411,7 +413,8 @@ def delete_file(image_url):
 
     # 🔥 DELETE FROM CLOUDINARY
     try:
-        public_id = image_url.split("/")[-1].split(".")[0]
+        path = urlparse(image_url).path
+        public_id = os.path.splitext(os.path.basename(path))[0]
         cloudinary.uploader.destroy(public_id)
     except Exception as e:
         print("Cloudinary delete failed:", e)
@@ -609,6 +612,9 @@ def upload_file():
     embedding_blob = pickle.dumps(new_embedding)
 
     conn = get_db_connection()
+    if conn is None:
+        return jsonify({"status": "error", "message": "Database connection failed"})
+
     cursor = conn.cursor()
 
     cursor.execute("""
@@ -630,17 +636,18 @@ def upload_file():
         existing_temp = None
 
         try:
-            response = requests.get(url, stream=True)
+            response = requests.get(url, stream=True, timeout=10)
             existing_temp = f"temp_existing_{random.randint(1000,9999)}.jpg"
 
             with open(existing_temp, "wb") as f:
                 for chunk in response.iter_content(1024):
                     f.write(chunk)
 
-            existing_embedding = pickle.loads(emb)
-            score = cosine_similarity(new_embedding, existing_embedding)
+            eexisting_hash = imagehash.hex_to_hash(img_hash)
+            new_hash_obj = imagehash.hex_to_hash(new_hash)
 
-            combined_score = score   # ✅ correct
+            distance = new_hash_obj - existing_hash
+            score = 1 - (distance / 64)
 
             if combined_score > highest_score:
                 highest_score = combined_score
@@ -684,7 +691,8 @@ def upload_file():
         except Exception as e:
             print("Email failed:", e)
 
-        os.remove(temp_path)
+        if os.path.exists(temp_path):
+            os.remove(temp_path)
         
         print("ORB SCORE:", orb_score)
         print("FINAL SCORE:", similarity_score)
