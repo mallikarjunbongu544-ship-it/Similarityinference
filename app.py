@@ -9,6 +9,7 @@ tf.config.threading.set_intra_op_parallelism_threads(1)
 tf.config.threading.set_inter_op_parallelism_threads(1)
 from dotenv import load_dotenv
 from urllib.parse import urlparse
+from skimage.metrics import structural_similarity as ssim
 import gc
 import requests
 load_dotenv()
@@ -44,7 +45,7 @@ def highlight_similarity(img1_path, img2_path):
     gray1 = cv2.cvtColor(img1, cv2.COLOR_BGR2GRAY)
     gray2 = cv2.cvtColor(img2, cv2.COLOR_BGR2GRAY)
 
-    orb = cv2.ORB_create(200)
+    orb = cv2.ORB_create(100)
 
     kp1, des1 = orb.detectAndCompute(gray1, None)
     kp2, des2 = orb.detectAndCompute(gray2, None)
@@ -99,18 +100,19 @@ cloudinary.config(
 SIMILARITY_THRESHOLD = 0.80
 ADMIN_EMAIL = "24h51a05r1@cmrcet.ac.in"
 
-print("Loading AI model...")
-
-model = MobileNetV2(
-    weights="imagenet",
-    include_top=False,
-    pooling="avg",
-    alpha=0.35
-)
-
-print("AI Model Loaded Successfully")
+model = None
 
 def get_model():
+    global model
+    if model is None:
+        print("Loading AI model...")
+        model = MobileNetV2(
+            weights="imagenet",
+            include_top=False,
+            pooling="avg",
+            alpha=0.20
+        )
+        print("AI Model Loaded Successfully")
     return model
 
 # ---------------- UTILITY FUNCTIONS ----------------
@@ -142,7 +144,7 @@ def get_embedding(img_path):
     img = Image.open(img_path)
     img = ImageOps.exif_transpose(img)
     img = img.convert("RGB")
-    img = img.resize((96,96))  # smaller = less memory
+    img = img.resize((64,64))  # smaller = less memory
 
     img_array = np.array(img)
     img_array = np.expand_dims(img_array, axis=0)
@@ -167,7 +169,7 @@ def orb_similarity(img1_path, img2_path):
     if img1 is None or img2 is None:
         return 0
 
-    orb = cv2.ORB_create(300)
+    orb = cv2.ORB_create(100)
 
     kp1, des1 = orb.detectAndCompute(img1, None)
     kp2, des2 = orb.detectAndCompute(img2, None)
@@ -820,3 +822,6 @@ def init_db():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
+
+
