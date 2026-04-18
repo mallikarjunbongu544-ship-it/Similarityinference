@@ -110,7 +110,7 @@ def get_model():
             weights="imagenet",
             include_top=False,
             pooling="avg",
-            alpha=0.20
+            alpha=0.35
         )
         print("AI Model Loaded Successfully")
     return model
