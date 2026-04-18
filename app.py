@@ -144,7 +144,7 @@ def get_embedding(img_path):
     img = Image.open(img_path)
     img = ImageOps.exif_transpose(img)
     img = img.convert("RGB")
-    img = img.resize((64,64))  # smaller = less memory
+    img = img.resize((48,48))  # smaller = less memory
 
     img_array = np.array(img)
     img_array = np.expand_dims(img_array, axis=0)
@@ -169,7 +169,7 @@ def orb_similarity(img1_path, img2_path):
     if img1 is None or img2 is None:
         return 0
 
-    orb = cv2.ORB_create(100)
+    orb = cv2.ORB_create(50)
 
     kp1, des1 = orb.detectAndCompute(img1, None)
     kp2, des2 = orb.detectAndCompute(img2, None)
@@ -645,7 +645,7 @@ def upload_file():
         SELECT image_url, user_email, embedding, image_hash, label 
         FROM uploads 
         ORDER BY id DESC 
-        LIMIT 3
+        LIMIT 2
     """)
     all_uploads = cursor.fetchall()
 
